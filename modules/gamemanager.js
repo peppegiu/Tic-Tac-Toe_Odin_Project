@@ -27,9 +27,9 @@ export const gameManager = function () {
     const playRound = function(position) {
         position = parseInt(position);
         if (isOver === false) {
-            if (position >= 0 && position < 9 && board[position] != undefined) {
-                board[position] = getActivePlayer().symbol;
-                if (board.checkWin(getActivePlayer()) === true) {
+            if (position >= 0 && position < 9 && board.getBoard()[0][position] != "") {
+                board.drawToken(getActivePlayer().symbol, position);
+                if (board.checkWin(getActivePlayer().symbol) === true) {
                     console.log(`${getActivePlayer().name} wins the round!`);
                     isOver = true;
                 }
