@@ -5,6 +5,7 @@ export const gameBoard = (function () {
   let tokenSequence = 0;
 
   const checkWin = (token) => {
+    let result;
     const endPosition = [
       [0, 1, 2],
       [3, 4, 5],
@@ -23,12 +24,14 @@ export const gameBoard = (function () {
       }
       if (tokenSequence == 3) {
         tokenSequence = 0;
-        return true;
+        result = true;
+        return {result, token} ;
       } else {
         tokenSequence = 0;
       }
     }
-    return false;
+    result = false;
+    return result;
   };
   const checkDraw = () => {
     let marked = 0;
@@ -52,29 +55,58 @@ export const gameBoard = (function () {
     }
   };
   const printTable = () => {
-    console.log(
-      `0: ${board[0]}| 1: ${board[1]}| 2: ${board[2]}\n-----------\n3: ${board[3]}| 4: ${board[4]}| 5: ${board[5]}\n-----------\n6: ${board[6]}| 7: ${board[7]}| 8: ${board[8]}`
-    );
-  };
+  // Helper to get X, O, or a space for the current board
+  const cell = (index) => board[index] === "" ? " " : board[index].toUpperCase();
+
+  console.log(
+    `\n--- CURRENT BOARD ---\n` +
+    ` ${cell(0)} | ${cell(1)} | ${cell(2)} \n` +
+    `-----------\n` +
+    ` ${cell(3)} | ${cell(4)} | ${cell(5)} \n` +
+    `-----------\n` +
+    ` ${cell(6)} | ${cell(7)} | ${cell(8)} \n\n` + // Extra space for separation
+    `--- POSITIONS MAP ---\n` +
+    ` 0 | 1 | 2 \n` +
+    `-----------\n` +
+    ` 3 | 4 | 5 \n` +
+    `-----------\n` +
+    ` 6 | 7 | 8 \n`
+  );
+};
   const getBoard = () => board; // copy of board so the actual variable don't get mutated from outer scope
   const restartBoard = () => {
-    for (let item of board) {
-      item = "";
+    for (let i = 0; i < board.length; i++) {
+      board[i] = "";
     }
   };
-  return { getBoard, printTable, restartBoard, checkWin, checkDraw, drawToken };
+  const avaliableMoves = () => {
+    let moves = [];
+    for (let i = 0; i < board.length; i++) {
+      if (board[i] == "") {
+        moves.push(i);
+      }
+    }
+    return moves;
+  }
+
+  const undoMove = function (position) {
+    board[position] = "";
+  }
+  return { getBoard, printTable, restartBoard, checkWin, checkDraw, drawToken, avaliableMoves, undoMove};
 })();
 
-export const gameManager = function () {
+export const gameManager = (function () {
   const playerOneName = "Player One";
   const playerTwoName = "Player Two";
   const players = [
     {
       name: playerOneName,
+      is_maximizing: false,
       symbol: "x",
     },
     {
       name: playerTwoName,
+      is_maximizing: true,
       symbol: "o",
     },
   ];
@@ -98,7 +130,7 @@ export const gameManager = function () {
         gameBoard.getBoard()[position] == ""
       ) {
         gameBoard.drawToken(getActivePlayer().symbol, position);
-        if (gameBoard.checkWin(getActivePlayer().symbol) === true) {
+        if (gameBoard.checkWin(getActivePlayer().symbol).result === true) {
           console.log(`${getActivePlayer().name} wins the round!`);
           isOver = true;
         } else if (gameBoard.checkDraw() === true) {
@@ -117,13 +149,78 @@ export const gameManager = function () {
       isOver = false;
       gameBoard.restartBoard();
     } else {
-      let confirm = prompt("The game is running. Are you sure to end now? s/y");
+      let confirm = prompt("The game is running. Are you sure to end now? s/n");
       if (confirm == "s") {
         isOver = true;
         restart();
       }
     }
   };
+  const startNewGame = function () {
+    isOver = false;
+    gameBoard.restartBoard();
+    activePlayer = players[0]; // Also reset the active player
+  };
 
-  return { playRound, restart, getGameState };
-};
+  return { playRound, restart, getGameState, getActivePlayer, startNewGame};
+})();
+
+export const aiPlayer = (function () {
+  
+  const minimax = function (is_maximizing) {
+    
+    if (gameBoard.checkWin("o").result) {
+      return 1;
+    }
+    else if (gameBoard.checkWin("x").result) {
+      return -1;
+    }
+    else if (gameBoard.checkDraw()) {
+      return 0;
+    }
+     const availableMoves = gameBoard.avaliableMoves();
+    
+    if (is_maximizing) {
+      let best_score = -Infinity;
+      for (const moves of availableMoves) {
+        gameBoard.drawToken("o", moves);
+        let score = minimax(false);
+        gameBoard.undoMove(moves);
+        best_score = Math.max(score, best_score);
+      }
+      return best_score
+    }
+    else {
+      let best_score = Infinity;
+      for (const moves of availableMoves) {
+        gameBoard.drawToken("x", moves);
+        let score = minimax(true);
+        gameBoard.undoMove(moves);
+        best_score = Math.min(score, best_score);
+      }
+      return best_score;
+    }
+  }
+
+  const getBestMove = function () {
+   
+    
+    let best_score = -Infinity;
+    let best_move = null;
+    const availableMoves = gameBoard.avaliableMoves();
+    if (gameManager.getActivePlayer().is_maximizing) {
+      for (const moves of availableMoves) {
+        gameBoard.drawToken("o", moves);
+        let score = minimax(false);
+        gameBoard.undoMove(moves);
+        if (score > best_score) {
+          best_score = score;
+          best_move = moves;
+        }
+      }
+      return best_move;
+    }
+    
+  }
+  return {getBestMove};
+})();

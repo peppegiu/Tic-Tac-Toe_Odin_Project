@@ -1,19 +1,17 @@
-import { gameBoard, gameManager } from "./modules/modules.js";
+import { gameBoard, gameManager, aiPlayer } from "./modules/modules.js";
 
 
 
 const gameInput = function () {
-    const gamemanager = gameManager();
     let input;
 
     const greetings = function () {
         console.log("Bem vindo ao pedra, papel e tesoura");
-        displayOn();
     }
     const displayOn = function () {
         gameBoard.printTable();
         input = prompt("Insira na posição desejada: ");
-        gamemanager.playRound(Number(input));
+        gameManager.playRound(Number(input));
     }
     const getInput = function () {
         if (input) {
@@ -25,15 +23,20 @@ const gameInput = function () {
     }
 
     const showMenu = function () {
-        console.log("1 - continue");
-        console.log("2 - exit");
+        console.log("1 - Two players mode");
+        console.log("2 - AI mode")
+        console.log("3 - exit");
         let option = prompt("Insert a option: ")
         switch (option) {
             case "1": 
+                gameManager.startNewGame();
                 start();
                 break;
             case "2":
+                gameManager.startNewGame();
+                aiMode();
                 break;
+
             default: 
                 console.log(`Error: ${option} is not a valid option`);
         }
@@ -43,14 +46,29 @@ const gameInput = function () {
         console.log("starting...");
         gameBoard.restartBoard();
         greetings();
-        while (gamemanager.getGameState()[0] == false) {
+        while (gameManager.getGameState()[0] == false) {
             displayOn();
         }
-        showMenu();
+    }
+    const aiMode = function () {
+        console.log("starting...");
+        greetings();
+        while (gameManager.getGameState()[0] == false) {
+            gameBoard.printTable();
+            if (gameManager.getActivePlayer().is_maximizing) {
+                console.log("AI is thinking...")
+                let move = aiPlayer.getBestMove();
+                gameManager.playRound(move);
+            }
+            else {
+                displayOn();
+            }
+            
+        }
     }
 
-    return {start};
+    return {start, showMenu};
 }
 
 const game = gameInput();
-game.start();
+game.showMenu();
