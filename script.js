@@ -5,7 +5,7 @@ const container = document.querySelector(".container");
 const startButton = document.querySelector(".start"); // Renamed to avoid conflict
 const twoPlayersInput = document.querySelector(".two-players");
 const AImode = document.querySelector(".AI");
-
+const restartButton = document.querySelector(".restart");
 
 const ScreenController = function () {
     const board = gameBoard.getBoard();
@@ -104,19 +104,27 @@ const ScreenController = function () {
     const endGame = (winner) => {
         blockBoard();
         if (winner) {
-            messageElement.textContent = `${winner.name} wins!`;
+            messageElement.textContent = `${winner} wins!`;
         } else {
             messageElement.textContent = "It's a draw!";
         }
+        container.innerHTML = "";
+        restartButton.disabled = false;
     };
-
     
     return {start, enableBoard, blockBoard, displayBoard, updateMove};    
 }
 
 window.onload = function () {
+    restartButton.disabled = true;
     const DOMControler = ScreenController();
     startButton.addEventListener("click", () => DOMControler.start())
+    restartButton.addEventListener("click", () => {
+        gameManager.end();
+        DOMControler.updateMove();
+        restartButton.disabled = true;
+        startButton.disabled = false;
+    })
 }
 
 

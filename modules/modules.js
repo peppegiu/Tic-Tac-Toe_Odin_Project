@@ -138,30 +138,21 @@ export const gameManager = (function () {
           isOver = true;
           
           console.log(symbol1)
-          return symbol1;
         } else if (gameBoard.checkDraw() === true) {
           messageElement.textContent = "Draw!";
           isOver = true;
-          return symbol1;
         } else {
           switchTurn();
-          return symbol1;
         }
       }
     } else {
       messageElement.textContent = "restart to play again!";
     }
   };
-  const restart = function () {
+  const end = function () {
     if (isOver == true) {
       isOver = false;
       gameBoard.restartBoard();
-    } else {
-      let confirm = prompt("The game is running. Are you sure to end now? s/n");
-      if (confirm == "s") {
-        isOver = true;
-        restart();
-      }
     }
   };
   const startNewGame = function () {
@@ -170,7 +161,7 @@ export const gameManager = (function () {
     activePlayer = players[0]; // Also reset the active player
   };
 
-  return { playRound, restart, getGameState, getActivePlayer, startNewGame};
+  return { playRound, end, getGameState, getActivePlayer, startNewGame};
 })();
 
 export const aiPlayer = (function () {
