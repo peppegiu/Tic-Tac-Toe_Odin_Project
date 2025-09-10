@@ -8,7 +8,7 @@ const AImode = document.querySelector(".AI");
 const restartButton = document.querySelector(".restart");
 
 const ScreenController = function () {
-    const board = gameBoard.getBoard();
+    const board = gameBoard.getBoard()[0];
 
     const displayBoard = function (aimode) {
             board.forEach((cell, index) => {
@@ -18,9 +18,8 @@ const ScreenController = function () {
                 cellButton.textContent = cell;
                 cellButton.addEventListener("click", () => {
                     const symbol = gameManager.getActivePlayer().symbol
-                    playTurn(index, aimode);
+                    playTurn(index, aimode, cellButton);
                     console.log(symbol);
-                    cellButton.textContent = symbol;
                 });
                 container.appendChild(cellButton);
             }) 
@@ -40,18 +39,25 @@ const ScreenController = function () {
         })
     }
 
-    const playTurn = (index, aimode) => {
-        if (gameManager.getGameState()[0] || !gameBoard.getBoard()[index] == "") {
+    const playTurn = (index, aimode, cell) => {
+        if (gameManager.getGameState()[0] || !gameBoard.getBoard()[0][index] == "") {
             return;
         }
-        gameManager.playRound(index);
+        let result = gameManager.playRound(index); 
         updateMove();
+        if (result.status == "continue") {
+            messageElement.textContent = `${gameManager.getActivePlayer().symbol.toUpperCase()} turn`
+        }
+        let symbol = gameManager.getActivePlayer.symbol;
+        cell.textContent = symbol;
         const gameState = gameManager.getGameState()[0];
-        if (gameState) {
+        if (gameState && !gameBoard.checkDraw()) {
             endGame(gameManager.getActivePlayer().name);
             return;
+        } else if (gameBoard.checkDraw()) {
+            endGame(false);
         }
-        if (aimode) {        
+        if (aimode) {                    
             if (gameManager.getActivePlayer().is_maximizing) {
                 messageElement.textContent = "AI is thinking...";
                 blockBoard();
@@ -59,15 +65,19 @@ const ScreenController = function () {
                 setTimeout(() => {
                     const aiMove = aiPlayer.getBestMove();
                     gameManager.playRound(aiMove);
+                    symbol = gameManager.getActivePlayer.symbol;
+                    cell.textContent = symbol;
                     updateMove();
                     
 
                     const aiGameState = gameManager.getGameState()[0];
-                    if (aiGameState) {
+                    if (aiGameState && !gameBoard.checkDraw()) {
                         endGame(gameManager.getActivePlayer().name);
-                    } else {
+                    } else if (!aiGameState && !gameBoard.checkDraw()) {
                         messageElement.textContent = "Your Turn";
                         enableBoard();
+                    } else if (gameBoard.checkDraw()){
+                        endGame(false);
                     }    
                 }, 700);
             }
@@ -77,11 +87,13 @@ const ScreenController = function () {
     const start = function () {
         if (!gameManager.getGameState()[0]) {
             if (AImode.checked) {
+                gameManager.changeAIName(true);
                 displayBoard(true); 
                 updateMove();
                 enableBoard();
             }
             else if (twoPlayersInput.checked) {
+                gameManager.changeAIName(false);
                 displayBoard(false);
                 updateMove();
                 enableBoard();
@@ -94,7 +106,7 @@ const ScreenController = function () {
     }
 
     const updateMove = function () {
-        const board = gameBoard.getBoard();
+        const board = gameBoard.getBoard()[0];
         const cells = container.children;
         for (let i = 0; i < cells.length; i++) {
             cells[i].textContent = board[i].toUpperCase();

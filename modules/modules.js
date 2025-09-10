@@ -8,14 +8,9 @@ export const gameBoard = (function () {
   const checkWin = (token) => {
     let result;
     const endPosition = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [6, 4, 2],
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7],[2, 5, 8],
+      [0, 4, 8], [6, 4, 2]
     ];
     for (let i = 0; i < endPosition.length; i++) {
       for (let y = 0; y < endPosition[i].length; y++) {
@@ -51,9 +46,9 @@ export const gameBoard = (function () {
   const drawToken = function (token, position) {
     if (board[position] == "") {
       board[position] = token;
+      return {success: true};
     } else {
-
-      messageElement.textContent = "Error: position not empty";
+      return {success: false, error: "position not empty"}
     }
   };
   const printTable = () => {
@@ -75,7 +70,7 @@ export const gameBoard = (function () {
     ` 6 | 7 | 8 \n`
   );
 };
-  const getBoard = () => board; // copy of board so the actual variable don't get mutated from outer scope
+  const getBoard = () => [board]; // copy of board so the actual variable don't get mutated from outer scope
   const restartBoard = () => {
     for (let i = 0; i < board.length; i++) {
       board[i] = "";
@@ -100,6 +95,7 @@ export const gameBoard = (function () {
 export const gameManager = (function () {
   const playerOneName = "Player One";
   const playerTwoName = "Player Two";
+  const AIname = "AI"
   const players = [
     {
       name: playerOneName,
@@ -129,26 +125,37 @@ export const gameManager = (function () {
       if (
         position >= 0 &&
         position < 9 &&
-        gameBoard.getBoard()[position] == ""
+        gameBoard.getBoard()[0][position] == ""
       ) {
         gameBoard.drawToken(getActivePlayer().symbol, position);
         let symbol1 = getActivePlayer()["symbol"];
         if (gameBoard.checkWin(getActivePlayer().symbol).result === true) {
-          messageElement.textContent = `${getActivePlayer().name} wins the round!`;
           isOver = true;
-          
-          console.log(symbol1)
+          return {status: "win", winner: getActivePlayer()}
         } else if (gameBoard.checkDraw() === true) {
-          messageElement.textContent = "Draw!";
           isOver = true;
+          return {status: "draw"}
         } else {
           switchTurn();
+          return { status: 'continue', nextPlayer: getActivePlayer()}
         }
       }
     } else {
       messageElement.textContent = "restart to play again!";
     }
   };
+
+  const changeAIName = (isAI) => {
+    if (isAI) {
+      players[1].name = AIname;
+      console.log("changed to AI")
+    }
+    else {
+      players[1].name = playerTwoName;
+      console.log("changed to player two name");
+    }
+  }
+
   const end = function () {
     if (isOver == true) {
       isOver = false;
@@ -161,7 +168,7 @@ export const gameManager = (function () {
     activePlayer = players[0]; // Also reset the active player
   };
 
-  return { playRound, end, getGameState, getActivePlayer, startNewGame};
+  return { playRound, end, getGameState, getActivePlayer, startNewGame, changeAIName };
 })();
 
 export const aiPlayer = (function () {
