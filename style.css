@@ -11,7 +11,7 @@ main {
     grid-template-rows: repeat(3, 100px);
 }
 
-button {
+.cell {
     border-radius: 0px;
     padding: 50px;
     background-color: bisque;

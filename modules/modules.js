@@ -1,8 +1,9 @@
-
+import { messageElement} from "../script.js";
 
 export const gameBoard = (function () {
   let board = ["", "", "", "", "", "", "", "", ""];
   let tokenSequence = 0;
+  
 
   const checkWin = (token) => {
     let result;
@@ -51,7 +52,8 @@ export const gameBoard = (function () {
     if (board[position] == "") {
       board[position] = token;
     } else {
-      console.log("Error: position not empty");
+
+      messageElement.textContent = "Error: position not empty";
     }
   };
   const printTable = () => {
@@ -130,18 +132,24 @@ export const gameManager = (function () {
         gameBoard.getBoard()[position] == ""
       ) {
         gameBoard.drawToken(getActivePlayer().symbol, position);
+        let symbol1 = getActivePlayer()["symbol"];
         if (gameBoard.checkWin(getActivePlayer().symbol).result === true) {
-          console.log(`${getActivePlayer().name} wins the round!`);
+          messageElement.textContent = `${getActivePlayer().name} wins the round!`;
           isOver = true;
+          
+          console.log(symbol1)
+          return symbol1;
         } else if (gameBoard.checkDraw() === true) {
-          console.log("Draw!");
+          messageElement.textContent = "Draw!";
           isOver = true;
+          return symbol1;
         } else {
           switchTurn();
+          return symbol1;
         }
       }
     } else {
-      console.log("restart to play again!");
+      messageElement.textContent = "restart to play again!";
     }
   };
   const restart = function () {
@@ -224,3 +232,4 @@ export const aiPlayer = (function () {
   }
   return {getBestMove};
 })();
+

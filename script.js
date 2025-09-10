@@ -1,74 +1,122 @@
 import { gameBoard, gameManager, aiPlayer } from "./modules/modules.js";
+export const messageElement = document.querySelector(".status");
+
+const container = document.querySelector(".container");
+const startButton = document.querySelector(".start"); // Renamed to avoid conflict
+const twoPlayersInput = document.querySelector(".two-players");
+const AImode = document.querySelector(".AI");
 
 
+const ScreenController = function () {
+    const board = gameBoard.getBoard();
 
-const gameInput = function () {
-    let input;
-
-    const greetings = function () {
-        console.log("Bem vindo ao pedra, papel e tesoura");
+    const displayBoard = function (aimode) {
+            board.forEach((cell, index) => {
+                const cellButton = document.createElement("button");
+                cellButton.classList.add("cell");
+                cellButton.dataset.column = index;
+                cellButton.textContent = cell;
+                cellButton.addEventListener("click", () => {
+                    const symbol = gameManager.getActivePlayer().symbol
+                    playTurn(index, aimode);
+                    console.log(symbol);
+                    cellButton.textContent = symbol;
+                });
+                container.appendChild(cellButton);
+            }) 
+            blockBoard();
+        }               
+    const blockBoard = function () {
+        const cellsButtons = container.childNodes;
+        cellsButtons.forEach((cell) => {
+            cell.disabled = true;
+        })
     }
-    const displayOn = function () {
-        gameBoard.printTable();
-        input = prompt("Insira na posição desejada: ");
-        gameManager.playRound(Number(input));
+
+    const enableBoard = function () {
+        const cellsButtons = container.childNodes;
+        cellsButtons.forEach((cell) => {
+            cell.disabled = false;
+        })
     }
-    const getInput = function () {
-        if (input) {
-            return input;
+
+    const playTurn = (index, aimode) => {
+        if (gameManager.getGameState()[0] || !gameBoard.getBoard()[index] == "") {
+            return;
         }
-        else {
-            return null;
+        gameManager.playRound(index);
+        updateMove();
+        const gameState = gameManager.getGameState()[0];
+        if (gameState) {
+            endGame(gameManager.getActivePlayer().name);
+            return;
         }
-    }
+        if (aimode) {        
+            if (gameManager.getActivePlayer().is_maximizing) {
+                messageElement.textContent = "AI is thinking...";
+                blockBoard();
 
-    const showMenu = function () {
-        console.log("1 - Two players mode");
-        console.log("2 - AI mode")
-        console.log("3 - exit");
-        let option = prompt("Insert a option: ")
-        switch (option) {
-            case "1": 
-                gameManager.startNewGame();
-                start();
-                break;
-            case "2":
-                gameManager.startNewGame();
-                aiMode();
-                break;
+                setTimeout(() => {
+                    const aiMove = aiPlayer.getBestMove();
+                    gameManager.playRound(aiMove);
+                    updateMove();
+                    
 
-            default: 
-                console.log(`Error: ${option} is not a valid option`);
+                    const aiGameState = gameManager.getGameState()[0];
+                    if (aiGameState) {
+                        endGame(gameManager.getActivePlayer().name);
+                    } else {
+                        messageElement.textContent = "Your Turn";
+                        enableBoard();
+                    }    
+                }, 700);
+            }
         }
-    }
+    };
 
     const start = function () {
-        console.log("starting...");
-        gameBoard.restartBoard();
-        greetings();
-        while (gameManager.getGameState()[0] == false) {
-            displayOn();
-        }
-    }
-    const aiMode = function () {
-        console.log("starting...");
-        greetings();
-        while (gameManager.getGameState()[0] == false) {
-            gameBoard.printTable();
-            if (gameManager.getActivePlayer().is_maximizing) {
-                console.log("AI is thinking...")
-                let move = aiPlayer.getBestMove();
-                gameManager.playRound(move);
+        if (!gameManager.getGameState()[0]) {
+            if (AImode.checked) {
+                displayBoard(true); 
+                updateMove();
+                enableBoard();
+            }
+            else if (twoPlayersInput.checked) {
+                displayBoard(false);
+                updateMove();
+                enableBoard();
             }
             else {
-                displayOn();
+                messageElement.textContent = "None selected";
             }
-            
+            startButton.disabled = true;
+        } 
+    }
+
+    const updateMove = function () {
+        const board = gameBoard.getBoard();
+        const cells = container.children;
+        for (let i = 0; i < cells.length; i++) {
+            cells[i].textContent = board[i].toUpperCase();
         }
     }
 
-    return {start, showMenu};
+    const endGame = (winner) => {
+        blockBoard();
+        if (winner) {
+            messageElement.textContent = `${winner.name} wins!`;
+        } else {
+            messageElement.textContent = "It's a draw!";
+        }
+    };
+
+    
+    return {start, enableBoard, blockBoard, displayBoard, updateMove};    
 }
 
-const game = gameInput();
-game.showMenu();
+window.onload = function () {
+    const DOMControler = ScreenController();
+    startButton.addEventListener("click", () => DOMControler.start())
+}
+
+
