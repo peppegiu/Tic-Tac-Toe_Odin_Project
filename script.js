@@ -48,8 +48,7 @@ const ScreenController = function () {
         if (result.status == "continue") {
             messageElement.textContent = `${gameManager.getActivePlayer().symbol.toUpperCase()} turn`
         }
-        let symbol = gameManager.getActivePlayer.symbol;
-        cell.textContent = symbol;
+        let symbol = gameManager.getActivePlayer().symbol;
         const gameState = gameManager.getGameState()[0];
         if (gameState && !gameBoard.checkDraw()) {
             endGame(gameManager.getActivePlayer().name);
